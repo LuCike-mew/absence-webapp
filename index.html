@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отметка пропусков</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #181818);
+            color: var(--tg-theme-text-color, #ffffff);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 16px;
+        }
+        .header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+        .pair-card {
+            background-color: var(--tg-theme-secondary-bg-color, #242424);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .pair-card.selected {
+            border-color: var(--tg-theme-button-color, #2481cc);
+            background-color: var(--tg-theme-secondary-bg-color, #2a2a2a);
+        }
+        .pair-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .pair-num {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #888888);
+        }
+        .pair-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid var(--tg-theme-hint-color, #888888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pair-card.selected .checkbox {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            border-color: var(--tg-theme-button-color, #2481cc);
+        }
+        .checkbox::after {
+            content: "";
+            display: none;
+            width: 5px;
+            height: 10px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .pair-card.selected .checkbox::after {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Отметьте пропущенные пары</div>
+    <div id="pairs-list"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.text = "Сохранить пропуски";
+        tg.MainButton.hide();
+
+        // Данные пар (можно динамически передавать при формировании страницы)
+        const pairs = [
+            { id: 1, name: "Математическая логика" },
+            { id: 2, name: "Разработка веб-приложений" },
+            { id: 3, name: "Базы данных" }
+        ];
+
+        const selected = new Set();
+        const container = document.getElementById("pairs-list");
+
+        pairs.forEach(pair => {
+            const card = document.createElement("div");
+            card.className = "pair-card";
+            card.innerHTML = `
+                <div class="pair-info">
+                    <span class="pair-num">Пара №${pair.id}</span>
+                    <span class="pair-title">${pair.name}</span>
+                </div>
+                <div class="checkbox"></div>
+            `;
+
+            card.addEventListener("click", () => {
+                if (selected.has(pair.id)) {
+                    selected.delete(pair.id);
+                    card.classList.remove("selected");
+                } else {
+                    selected.add(pair.id);
+                    card.classList.add("selected");
+                }
+
+                if (selected.size > 0) {
+                    tg.MainButton.show();
+                } else {
+                    tg.MainButton.hide();
+                }
+            });
+
+            container.appendChild(card);
+        });
+
+        tg.MainButton.onClick(() => {
+            const data = Array.from(selected).map(id => {
+                const pair = pairs.find(p => p.id === id);
+                return { pair_number: pair.id, subject: pair.name };
+            });
+            tg.sendData(JSON.stringify(data));
+        });
+    </script>
+</body>
+</html>
