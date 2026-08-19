@@ -544,9 +544,8 @@
 
       showToast("Сохранение...");
 
-      setTimeout(() => {
-        tg.sendData(JSON.stringify({ absences: absences }));
-      }, 300);
+      // Отправка данных боту через Telegram Web App SDK
+      tg.sendData(JSON.stringify({ absences: absences }));
     }
 
     initDaysPicker();
