@@ -298,9 +298,40 @@
       font-weight: 600;
       cursor: pointer;
     }
+
+    .submit-btn:active {
+    transform: scale(0.98);
+    opacity: 0.85;
+    }
+    /* Всплывающее уведомление */
+  .toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background-color: #4caf50;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    z-index: 1000;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
   </style>
 </head>
 <body>
+
+  <div id="toast" class="toast">Пропуски успешно сохранены</div>
 
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchMainTab('schedule')">Расписание</button>
@@ -480,25 +511,46 @@
     }
 
     // Отправка выбранных пропусков
-    function sendData() {
-      const absences = [];
+  function showToast(text) {
+    const toast = document.getElementById('toast');
+    toast.innerText = text;
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2000);
+  }
 
-      selectedPairs.forEach(key => {
-        const [dayIdx, pairNum] = key.split('_').map(Number);
-        const day = weekData[dayIdx];
-        const pair = day.pairs.find(p => p.num === pairNum);
-
-        if (pair) {
-          absences.push({
-            date: day.full_date,
-            pair_number: pair.num,
-            subject: pair.subject
-          });
-        }
-      });
-
-      tg.sendData(JSON.stringify({ absences: absences }));
+  function sendData() {
+    if (selectedPairs.size === 0) {
+      tg.showAlert("Выберите хотя бы одну пару для отметки пропуска");
+      return;
     }
+
+    const absences = [];
+
+    selectedPairs.forEach(key => {
+      const [dayIdx, pairNum] = key.split('_').map(Number);
+      const day = weekData[dayIdx];
+      if (!day) return;
+
+      const pair = day.pairs.find(p => p.num === pairNum);
+      if (pair) {
+        absences.push({
+          date: day.full_date,
+          pair_number: pair.num,
+          subject: pair.subject
+        });
+      }
+    });
+
+    // Показываем зеленый баннер на экране
+    showToast("Пропуски успешно сохранены");
+
+    // Задержка 1.5 секунды, чтобы пользователь успел увидеть плашку перед закрытием окна
+    setTimeout(() => {
+      tg.sendData(JSON.stringify({ absences: absences }));
+    }, 1500);
+  }
 
     // Старт
     initDaysPicker();
