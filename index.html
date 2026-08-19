@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Отметка пропусков</title>
+  <title>Учет пропусков</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -13,15 +13,16 @@
       --hint-color: var(--tg-theme-hint-color, #7e8b9b);
       --button-color: var(--tg-theme-button-color, #2ea6ff);
       --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+      --warning-color: #e6a23c;
       --danger-color: #ff5252;
-      --border-radius: 14px;
+      --border-radius: 12px;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
@@ -29,29 +30,29 @@
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
-      padding: 16px;
+      padding: 14px;
       padding-bottom: 90px;
       min-height: 100vh;
     }
 
-    /* Навигация по вкладкам */
+    /* Главные вкладки */
     .nav-tabs {
       display: flex;
       background-color: var(--secondary-bg-color);
       padding: 4px;
-      border-radius: 12px;
-      margin-bottom: 20px;
+      border-radius: var(--border-radius);
+      margin-bottom: 14px;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 10px 16px;
+      padding: 10px;
       border: none;
       background: transparent;
       color: var(--hint-color);
       font-size: 14px;
       font-weight: 600;
-      border-radius: 9px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -59,7 +60,6 @@
     .tab-btn.active {
       background-color: var(--bg-color);
       color: var(--text-color);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .tab-content {
@@ -70,38 +70,80 @@
       display: block;
     }
 
-    /* Подзаголовки */
-    .section-header {
+    /* Дни недели (горизонтальный скролл) */
+    .days-picker {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+      scrollbar-width: none;
+    }
+
+    .days-picker::-webkit-scrollbar {
+      display: none;
+    }
+
+    .day-pill {
+      flex: 0 0 auto;
+      min-width: 65px;
+      padding: 8px 10px;
+      background-color: var(--secondary-bg-color);
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .day-pill.active {
+      border-color: var(--button-color);
+      background-color: rgba(46, 166, 255, 0.1);
+    }
+
+    .day-pill-name {
+      font-size: 11px;
+      color: var(--hint-color);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .day-pill-date {
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .day-pill.active .day-pill-name,
+    .day-pill.active .day-pill-date {
+      color: var(--button-color);
+    }
+
+    /* Заголовки */
+    .section-title {
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
       color: var(--hint-color);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       font-weight: 700;
     }
 
-    /* Сетка карточек */
+    /* Контейнер карточек */
     .cards-container {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    /* Карточка пары */
     .pair-card {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 14px 16px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border: 2px solid transparent;
       cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .pair-card:active {
-      transform: scale(0.98);
     }
 
     .pair-card.selected {
@@ -115,150 +157,181 @@
       gap: 4px;
     }
 
+    .pair-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .pair-badge {
       font-size: 11px;
       font-weight: 700;
       color: var(--button-color);
+    }
+
+    .replacement-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--warning-color);
+      background-color: rgba(230, 162, 60, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .pair-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
-      color: var(--text-color);
     }
 
-    /* Чекбокс */
-    .checkbox-custom {
-      width: 22px;
-      height: 22px;
+    .checkbox {
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       border: 2px solid var(--hint-color);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
       flex-shrink: 0;
     }
 
-    .pair-card.selected .checkbox-custom {
+    .pair-card.selected .checkbox {
       background-color: var(--button-color);
       border-color: var(--button-color);
     }
 
-    .checkbox-custom::after {
+    .pair-card.selected .checkbox::after {
       content: '';
-      width: 5px;
-      height: 9px;
+      width: 4px;
+      height: 8px;
       border: solid var(--button-text-color);
       border-width: 0 2px 2px 0;
-      transform: rotate(45deg) scale(0);
-      transition: transform 0.2s ease;
+      transform: rotate(45deg);
       margin-top: -2px;
     }
 
-    .pair-card.selected .checkbox-custom::after {
-      transform: rotate(45deg) scale(1);
+    /* Фильтры истории */
+    .filter-box {
+      background-color: var(--secondary-bg-color);
+      border-radius: var(--border-radius);
+      padding: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
-    /* Карточка истории */
+    .filter-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .filter-group label {
+      font-size: 11px;
+      color: var(--hint-color);
+      font-weight: 600;
+    }
+
+    .filter-group input {
+      background-color: var(--bg-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-color);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+    }
+
     .history-card {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 14px 16px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
     .history-date {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--hint-color);
       margin-top: 2px;
     }
 
-    .status-tag {
-      font-size: 12px;
+    .status-badge {
+      font-size: 11px;
       font-weight: 600;
-      padding: 4px 10px;
+      padding: 4px 8px;
       border-radius: 6px;
       background-color: rgba(255, 82, 82, 0.12);
       color: var(--danger-color);
     }
 
-    /* Заглушка при отсутствии данных */
     .empty-state {
       text-align: center;
-      padding: 36px 20px;
+      padding: 30px 10px;
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-    }
-
-    .empty-state-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-color);
-      margin-bottom: 4px;
-    }
-
-    .empty-state-subtitle {
-      font-size: 13px;
       color: var(--hint-color);
+      font-size: 13px;
     }
 
-    /* Нижняя фиксированная панель */
     .bottom-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 16px;
+      padding: 14px;
       background-color: var(--bg-color);
       border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .submit-btn {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       border: none;
       border-radius: var(--border-radius);
       background-color: var(--button-color);
       color: var(--button-text-color);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.2s ease, transform 0.1s ease;
-    }
-
-    .submit-btn:active {
-      transform: scale(0.99);
     }
   </style>
 </head>
 <body>
 
-  <!-- Навигация -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('today')">Расписание</button>
-    <button class="tab-btn" onclick="switchTab('history')">История</button>
+    <button class="tab-btn active" onclick="switchMainTab('schedule')">Расписание</button>
+    <button class="tab-btn" onclick="switchMainTab('history')">История</button>
   </div>
 
-  <!-- Вкладка 1: Сегодняшние пары -->
-  <div id="tab-today" class="tab-content active">
-    <div class="section-header">Пары на сегодня</div>
+  <!-- Вкладка Расписание -->
+  <div id="tab-schedule" class="tab-content active">
+    <div class="days-picker" id="days-picker"></div>
+    <div class="section-title" id="selected-day-title">Занятия</div>
     <div id="pairs-container" class="cards-container"></div>
   </div>
 
-  <!-- Вкладка 2: История пропусков -->
+  <!-- Вкладка История -->
   <div id="tab-history" class="tab-content">
-    <div class="section-header">Зафиксированные пропуски</div>
+    <div class="filter-box">
+      <div class="filter-group">
+        <label>Дата с</label>
+        <input type="date" id="date-from" onchange="applyHistoryFilter()">
+      </div>
+      <div class="filter-group">
+        <label>Дата по</label>
+        <input type="date" id="date-to" onchange="applyHistoryFilter()">
+      </div>
+    </div>
+    <div class="section-title">Сохраненные пропуски</div>
     <div id="history-container" class="cards-container"></div>
   </div>
 
-  <!-- Фиксированная кнопка сохранения -->
   <div class="bottom-bar" id="bottom-bar">
-    <button class="submit-btn" onclick="sendData()">Сохранить изменения</button>
+    <button class="submit-btn" onclick="sendData()">Сохранить пропуски</button>
   </div>
 
   <script>
@@ -266,96 +339,169 @@
     tg.ready();
     tg.expand();
 
-    const selectedPairs = new Set();
-
-    // Получение параметров из URL
     const urlParams = new URLSearchParams(window.location.search);
-    const pairsData = urlParams.get('pairs');
-    const historyData = urlParams.get('history');
+    const rawWeek = urlParams.get('week');
+    const rawHistory = urlParams.get('history');
 
-    const pairs = pairsData ? JSON.parse(decodeURIComponent(pairsData)) : [];
-    const history = historyData ? JSON.parse(decodeURIComponent(historyData)) : [];
+    const weekData = rawWeek ? JSON.parse(decodeURIComponent(rawWeek)) : [];
+    const historyData = rawHistory ? JSON.parse(decodeURIComponent(rawHistory)) : [];
 
-    // Переключение вкладок
-    function switchTab(tabName) {
+    let activeDayIndex = 0;
+    const selectedPairs = new Set(); // Хранит выбранные пары: "dayIndex_pairNum"
+
+    // Переключение главных вкладок
+    function switchMainTab(tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-      if (tabName === 'today') {
+      if (tabName === 'schedule') {
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        document.getElementById('tab-today').classList.add('active');
+        document.getElementById('tab-schedule').classList.add('active');
         document.getElementById('bottom-bar').style.display = 'block';
       } else {
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('tab-history').classList.add('active');
         document.getElementById('bottom-bar').style.display = 'none';
+        renderHistory(historyData);
       }
     }
 
-    // Рендер списка пар
-    const pairsContainer = document.getElementById('pairs-container');
-    if (pairs.length === 0) {
-      pairsContainer.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-title">Занятий нет</div>
-          <div class="empty-state-subtitle">На выбранный день расписание отсутствует</div>
-        </div>
-      `;
-    } else {
-      pairs.forEach(pair => {
+    // Инициализация переключателя дней
+    function initDaysPicker() {
+      const picker = document.getElementById('days-picker');
+      picker.innerHTML = '';
+
+      weekData.forEach((day, index) => {
+        const pill = document.createElement('div');
+        pill.className = `day-pill ${index === activeDayIndex ? 'active' : ''}`;
+        pill.innerHTML = `
+          <div class="day-pill-name">${day.day_name.substring(0, 2)}</div>
+          <div class="day-pill-date">${day.date}</div>
+        `;
+        pill.onclick = () => selectDay(index);
+        picker.appendChild(pill);
+      });
+
+      renderPairs();
+    }
+
+    function selectDay(index) {
+      activeDayIndex = index;
+      document.querySelectorAll('.day-pill').forEach((p, idx) => {
+        p.classList.toggle('active', idx === index);
+      });
+      renderPairs();
+    }
+
+    // Рендер пар выбранного дня
+    function renderPairs() {
+      const container = document.getElementById('pairs-container');
+      const title = document.getElementById('selected-day-title');
+      container.innerHTML = '';
+
+      if (!weekData[activeDayIndex]) return;
+
+      const currentDay = weekData[activeDayIndex];
+      title.innerText = `Занятия — ${currentDay.day_name} (${currentDay.date})`;
+
+      if (!currentDay.pairs || currentDay.pairs.length === 0) {
+        container.innerHTML = '<div class="empty-state">На этот день пар не найдено</div>';
+        return;
+      }
+
+      currentDay.pairs.forEach(pair => {
+        const key = `${activeDayIndex}_${pair.num}`;
         const card = document.createElement('div');
-        card.className = 'pair-card';
+        card.className = `pair-card ${selectedPairs.has(key) ? 'selected' : ''}`;
         card.innerHTML = `
           <div class="pair-info">
-            <span class="pair-badge">${pair.num} пара</span>
+            <div class="pair-header">
+              <span class="pair-badge">${pair.num} пара</span>
+              ${pair.is_replacement ? '<span class="replacement-tag">Замена</span>' : ''}
+            </div>
             <span class="pair-title">${pair.subject}</span>
           </div>
-          <div class="checkbox-custom"></div>
+          <div class="checkbox"></div>
         `;
+
         card.onclick = () => {
-          if (selectedPairs.has(pair.num)) {
-            selectedPairs.delete(pair.num);
+          if (selectedPairs.has(key)) {
+            selectedPairs.delete(key);
             card.classList.remove('selected');
           } else {
-            selectedPairs.add(pair.num);
+            selectedPairs.add(key);
             card.classList.add('selected');
           }
         };
-        pairsContainer.appendChild(card);
+
+        container.appendChild(card);
       });
     }
 
     // Рендер истории
-    const historyContainer = document.getElementById('history-container');
-    if (history.length === 0) {
-      historyContainer.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-title">История чиста</div>
-          <div class="empty-state-subtitle">Зафиксированных пропусков пока нет</div>
-        </div>
-      `;
-    } else {
-      history.forEach(item => {
+    function renderHistory(data) {
+      const container = document.getElementById('history-container');
+      container.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state">Пропуски не найдены</div>';
+        return;
+      }
+
+      data.forEach(item => {
         const card = document.createElement('div');
         card.className = 'history-card';
         card.innerHTML = `
           <div class="pair-info">
             <span class="pair-title">${item.subject}</span>
-            <span class="history-date">${item.date} (${item.pair_num} пара)</span>
+            <span class="history-date">${item.date} (Пара №${item.pair_num})</span>
           </div>
-          <span class="status-tag">Пропуск</span>
+          <span class="status-badge">Пропуск</span>
         `;
-        historyContainer.appendChild(card);
+        container.appendChild(card);
       });
     }
 
-    // Отправка данных боту
-    function sendData() {
-      const result = {
-        absent_pairs: Array.from(selectedPairs)
-      };
-      tg.sendData(JSON.stringify(result));
+    // Фильтр истории по датам
+    function applyHistoryFilter() {
+      const fromVal = document.getElementById('date-from').value;
+      const toVal = document.getElementById('date-to').value;
+
+      let filtered = historyData;
+
+      if (fromVal) {
+        filtered = filtered.filter(item => item.date >= fromVal);
+      }
+      if (toVal) {
+        filtered = filtered.filter(item => item.date <= toVal);
+      }
+
+      renderHistory(filtered);
     }
+
+    // Отправка выбранных пропусков
+    function sendData() {
+      const absences = [];
+
+      selectedPairs.forEach(key => {
+        const [dayIdx, pairNum] = key.split('_').map(Number);
+        const day = weekData[dayIdx];
+        const pair = day.pairs.find(p => p.num === pairNum);
+
+        if (pair) {
+          absences.push({
+            date: day.full_date,
+            pair_number: pair.num,
+            subject: pair.subject
+          });
+        }
+      });
+
+      tg.sendData(JSON.stringify({ absences: absences }));
+    }
+
+    // Старт
+    initDaysPicker();
   </script>
 </body>
 </html>
