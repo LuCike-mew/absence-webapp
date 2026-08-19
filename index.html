@@ -519,7 +519,7 @@
       }, 2000);
     }
 
-    function sendData() {
+    async function sendData() {
       if (selectedPairs.size === 0) {
         tg.showAlert("Выберите хотя бы одну пару для отметки пропуска");
         return;
@@ -542,11 +542,43 @@
         }
       });
 
-      showToast("Пропуски успешно сохранены");
+      const userId = tg.initDataUnsafe?.user?.id;
 
-      setTimeout(() => {
-        tg.sendData(JSON.stringify({ absences: absences }));
-      }, 1500);
+      try {
+        const response = await fetch('/api/save-absences', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            absences: absences
+          })
+        });
+
+        if (response.ok) {
+          // Обновляем локальную историю прямо на клиенте
+          absences.forEach(item => {
+            historyData.unshift({
+              date: item.date,
+              pair_num: item.pair_number,
+              subject: item.subject
+            });
+          });
+
+          // Снимаем выделение с карточек и обновляем UI
+          selectedPairs.clear();
+          renderPairs();
+
+          // Показываем зеленый баннер
+          showToast("Пропуски успешно сохранены");
+        } else {
+          tg.showAlert("Ошибка при сохранении на сервере");
+        }
+      } catch (error) {
+        console.error("Ошибка запроса:", error);
+        tg.showAlert("Не удалось связаться с сервером");
+      }
     }
 
     initDaysPicker();
