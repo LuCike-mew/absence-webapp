@@ -35,7 +35,6 @@
       min-height: 100vh;
     }
 
-    /* Главные вкладки */
     .nav-tabs {
       display: flex;
       background-color: var(--secondary-bg-color);
@@ -70,7 +69,6 @@
       display: block;
     }
 
-    /* Дни недели (горизонтальный скролл) */
     .days-picker {
       display: flex;
       gap: 8px;
@@ -118,7 +116,6 @@
       color: var(--button-color);
     }
 
-    /* Заголовки */
     .section-title {
       font-size: 12px;
       text-transform: uppercase;
@@ -128,7 +125,6 @@
       font-weight: 700;
     }
 
-    /* Контейнер карточек */
     .cards-container {
       display: flex;
       flex-direction: column;
@@ -210,7 +206,6 @@
       margin-top: -2px;
     }
 
-    /* Фильтры истории */
     .filter-box {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
@@ -300,33 +295,33 @@
     }
 
     .submit-btn:active {
-    transform: scale(0.98);
-    opacity: 0.85;
+      transform: scale(0.98);
+      opacity: 0.85;
     }
-    /* Всплывающее уведомление */
-  .toast {
-    position: fixed;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-80px);
-    background-color: #4caf50;
-    color: #ffffff;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-    z-index: 1000;
-    pointer-events: none;
-    white-space: nowrap;
-  }
 
-  .toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
+    .toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background-color: #4caf50;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      z-index: 1000;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -338,14 +333,12 @@
     <button class="tab-btn" onclick="switchMainTab('history')">История</button>
   </div>
 
-  <!-- Вкладка Расписание -->
   <div id="tab-schedule" class="tab-content active">
     <div class="days-picker" id="days-picker"></div>
     <div class="section-title" id="selected-day-title">Занятия</div>
     <div id="pairs-container" class="cards-container"></div>
   </div>
 
-  <!-- Вкладка История -->
   <div id="tab-history" class="tab-content">
     <div class="filter-box">
       <div class="filter-group">
@@ -374,13 +367,24 @@
     const rawWeek = urlParams.get('week');
     const rawHistory = urlParams.get('history');
 
-    const weekData = rawWeek ? JSON.parse(decodeURIComponent(rawWeek)) : [];
-    const historyData = rawHistory ? JSON.parse(decodeURIComponent(rawHistory)) : [];
+    let weekData = [];
+    let historyData = [];
+
+    try {
+      if (rawWeek) weekData = JSON.parse(rawWeek);
+    } catch (e) {
+      console.error("Ошибка парсинга недельного расписания:", e);
+    }
+
+    try {
+      if (rawHistory) historyData = JSON.parse(rawHistory);
+    } catch (e) {
+      console.error("Ошибка парсинга истории:", e);
+    }
 
     let activeDayIndex = 0;
-    const selectedPairs = new Set(); // Хранит выбранные пары: "dayIndex_pairNum"
+    const selectedPairs = new Set();
 
-    // Переключение главных вкладок
     function switchMainTab(tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -397,7 +401,6 @@
       }
     }
 
-    // Инициализация переключателя дней
     function initDaysPicker() {
       const picker = document.getElementById('days-picker');
       picker.innerHTML = '';
@@ -424,7 +427,6 @@
       renderPairs();
     }
 
-    // Рендер пар выбранного дня
     function renderPairs() {
       const container = document.getElementById('pairs-container');
       const title = document.getElementById('selected-day-title');
@@ -469,7 +471,6 @@
       });
     }
 
-    // Рендер истории
     function renderHistory(data) {
       const container = document.getElementById('history-container');
       container.innerHTML = '';
@@ -493,7 +494,6 @@
       });
     }
 
-    // Фильтр истории по датам
     function applyHistoryFilter() {
       const fromVal = document.getElementById('date-from').value;
       const toVal = document.getElementById('date-to').value;
@@ -510,49 +510,45 @@
       renderHistory(filtered);
     }
 
-    // Отправка выбранных пропусков
-  function showToast(text) {
-    const toast = document.getElementById('toast');
-    toast.innerText = text;
-    toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 2000);
-  }
-
-  function sendData() {
-    if (selectedPairs.size === 0) {
-      tg.showAlert("Выберите хотя бы одну пару для отметки пропуска");
-      return;
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.innerText = text;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2000);
     }
 
-    const absences = [];
-
-    selectedPairs.forEach(key => {
-      const [dayIdx, pairNum] = key.split('_').map(Number);
-      const day = weekData[dayIdx];
-      if (!day) return;
-
-      const pair = day.pairs.find(p => p.num === pairNum);
-      if (pair) {
-        absences.push({
-          date: day.full_date,
-          pair_number: pair.num,
-          subject: pair.subject
-        });
+    function sendData() {
+      if (selectedPairs.size === 0) {
+        tg.showAlert("Выберите хотя бы одну пару для отметки пропуска");
+        return;
       }
-    });
 
-    // Показываем зеленый баннер на экране
-    showToast("Пропуски успешно сохранены");
+      const absences = [];
 
-    // Задержка 1.5 секунды, чтобы пользователь успел увидеть плашку перед закрытием окна
-    setTimeout(() => {
-      tg.sendData(JSON.stringify({ absences: absences }));
-    }, 1500);
-  }
+      selectedPairs.forEach(key => {
+        const [dayIdx, pairNum] = key.split('_').map(Number);
+        const day = weekData[dayIdx];
+        if (!day) return;
 
-    // Старт
+        const pair = day.pairs.find(p => p.num === pairNum);
+        if (pair) {
+          absences.push({
+            date: day.full_date,
+            pair_number: pair.num,
+            subject: pair.subject
+          });
+        }
+      });
+
+      showToast("Пропуски успешно сохранены");
+
+      setTimeout(() => {
+        tg.sendData(JSON.stringify({ absences: absences }));
+      }, 1500);
+    }
+
     initDaysPicker();
   </script>
 </body>
