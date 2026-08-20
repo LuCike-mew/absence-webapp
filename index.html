@@ -545,15 +545,13 @@
         const day = weekData[dayIdx];
         if (!day) return;
 
-        const pair = day.pairs.find(p => p.num === pairNum);
+        const pair = day.pairs.find(p => Number(p.num) === Number(pairNum));
         if (pair) {
-          // Страховка: берем full_date, а если его нет — fallback на date
           const pairDate = day.full_date || day.date;
 
           absences.push({
             date: pairDate,
-            pair_number: pair.num,
-            pair_num: pair.num, // Дублируем ключ на случай разницы в именовании на бэкенде
+            pair_number: Number(pair.num),
             subject: pair.subject
           });
         }
@@ -561,11 +559,15 @@
 
       showToast("Сохранение...");
 
-      try {
-        tg.sendData(JSON.stringify({ absences: absences }));
-      } catch (err) {
-        console.error("Ошибка при вызове sendData:", err);
-      }
+      setTimeout(() => {
+        try {
+          tg.sendData(JSON.stringify({ absences: absences }));
+          tg.close();
+        } catch (err) {
+          console.error("Ошибка при вызове sendData:", err);
+          tg.showAlert("Откройте приложение через кнопку клавиатуры 'Отметить пропуски'.");
+        }
+      }, 200);
     }
 
     initDaysPicker();
