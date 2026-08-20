@@ -30,28 +30,29 @@
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
-      padding: 14px;
-      padding-bottom: 90px;
+      padding: 10px 12px;
+      padding-bottom: 80px;
       min-height: 100vh;
     }
 
+    /* Навигация */
     .nav-tabs {
       display: flex;
       background-color: var(--secondary-bg-color);
-      padding: 4px;
+      padding: 3px;
       border-radius: var(--border-radius);
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 10px;
+      padding: 8px 0;
       border: none;
       background: transparent;
       color: var(--hint-color);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: 9px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -69,46 +70,47 @@
       display: block;
     }
 
+    /* Компактный переключатель дней */
     .days-picker {
       display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 14px;
-      scrollbar-width: none;
-    }
-
-    .days-picker::-webkit-scrollbar {
-      display: none;
+      gap: 5px;
+      margin-bottom: 12px;
+      width: 100%;
     }
 
     .day-pill {
-      flex: 0 0 auto;
-      min-width: 65px;
-      padding: 8px 10px;
+      flex: 1;
+      min-width: 0;
+      padding: 7px 2px;
       background-color: var(--secondary-bg-color);
       border-radius: 10px;
       text-align: center;
       cursor: pointer;
       border: 1px solid transparent;
+      transition: all 0.15s ease;
     }
 
     .day-pill.active {
       border-color: var(--button-color);
-      background-color: rgba(46, 166, 255, 0.1);
+      background-color: rgba(46, 166, 255, 0.12);
     }
 
     .day-pill-name {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--hint-color);
       text-transform: uppercase;
-      font-weight: 600;
+      font-weight: 700;
+      line-height: 1;
     }
 
     .day-pill-date {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
-      margin-top: 2px;
+      margin-top: 3px;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .day-pill.active .day-pill-name,
@@ -117,29 +119,32 @@
     }
 
     .section-title {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       color: var(--hint-color);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       font-weight: 700;
+      padding-left: 2px;
     }
 
+    /* Карточки пар */
     .cards-container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .pair-card {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 12px 14px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border: 2px solid transparent;
+      border: 1.5px solid transparent;
       cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
     }
 
     .pair-card.selected {
@@ -150,13 +155,14 @@
     .pair-info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
+      padding-right: 8px;
     }
 
     .pair-header {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .pair-badge {
@@ -166,29 +172,31 @@
     }
 
     .replacement-tag {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       color: var(--warning-color);
       background-color: rgba(230, 162, 60, 0.15);
-      padding: 2px 6px;
+      padding: 2px 5px;
       border-radius: 4px;
       text-transform: uppercase;
     }
 
     .pair-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
+      line-height: 1.25;
     }
 
     .checkbox {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       border: 2px solid var(--hint-color);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      transition: all 0.15s ease;
     }
 
     .pair-card.selected .checkbox {
@@ -199,41 +207,41 @@
     .pair-card.selected .checkbox::after {
       content: '';
       width: 4px;
-      height: 8px;
+      height: 7px;
       border: solid var(--button-text-color);
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
       margin-top: -2px;
     }
 
+    /* Фильтры и история */
     .filter-box {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 12px;
-      margin-bottom: 14px;
+      padding: 10px;
+      margin-bottom: 10px;
       display: flex;
-      gap: 10px;
-      align-items: center;
+      gap: 8px;
     }
 
     .filter-group {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .filter-group label {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--hint-color);
       font-weight: 600;
     }
 
     .filter-group input {
       background-color: var(--bg-color);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: var(--text-color);
-      padding: 8px;
+      padding: 6px 8px;
       border-radius: 6px;
       font-size: 12px;
       outline: none;
@@ -242,7 +250,7 @@
     .history-card {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 12px 14px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -251,40 +259,43 @@
     .history-date {
       font-size: 11px;
       color: var(--hint-color);
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
     .status-badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 5px;
       background-color: rgba(255, 82, 82, 0.12);
       color: var(--danger-color);
+      white-space: nowrap;
     }
 
     .empty-state {
       text-align: center;
-      padding: 30px 10px;
+      padding: 24px 10px;
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
       color: var(--hint-color);
       font-size: 13px;
     }
 
+    /* Нижняя панель */
     .bottom-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 14px;
+      padding: 10px 12px;
       background-color: var(--bg-color);
       border-top: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 100;
     }
 
     .submit-btn {
       width: 100%;
-      padding: 12px;
+      padding: 11px;
       border: none;
       border-radius: var(--border-radius);
       background-color: var(--button-color);
@@ -292,6 +303,7 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.1s ease;
     }
 
     .submit-btn:active {
@@ -299,16 +311,17 @@
       opacity: 0.85;
     }
 
+    /* Тоаст уведомление */
     .toast {
       position: fixed;
-      top: 16px;
+      top: 12px;
       left: 50%;
       transform: translateX(-50%) translateY(-80px);
       background-color: #4caf50;
       color: #ffffff;
-      padding: 12px 20px;
+      padding: 10px 18px;
       border-radius: 10px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
       transition: transform 0.3s ease, opacity 0.3s ease;
@@ -543,8 +556,6 @@
       });
 
       showToast("Сохранение...");
-
-      // Отправка данных боту через Telegram Web App SDK
       tg.sendData(JSON.stringify({ absences: absences }));
     }
 
