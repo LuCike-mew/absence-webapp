@@ -560,6 +560,46 @@
       tg.sendData(JSON.stringify({ absences: absences }));
     }
 
+    async function parseCompressedHistory(compressedB64) {
+      if (!compressedB64) return [];
+
+      try {
+        // Восстанавливаем Base64 из URL-safe формата
+        let base64 = compressedB64.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) base64 += '=';
+
+        // Переводим Base64 в байтовый массив
+        const binaryString = atob(base64);
+        const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+
+        // Распаковываем GZIP прямо в браузере
+        const cs = new DecompressionStream('gzip');
+        const writer = cs.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+
+        const decompressedArrayBuffer = await new Response(cs.readable).arrayBuffer();
+        const text = new TextDecoder().decode(decompressedArrayBuffer);
+
+        // Разбираем обратно в массив объектов
+        return text.split('\n').filter(Boolean).map(line => {
+          const [date, pair_num, subject] = line.split('|');
+          return { date, pair_num: parseInt(pair_num), subject };
+        });
+      } catch (e) {
+        console.error("Ошибка распаковки истории:", e);
+        return [];
+      }
+    }
+
+    // При старте приложения:
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawHistory = urlParams.get('h');
+
+    parseCompressedHistory(rawHistory).then(historyData => {
+      renderHistory(historyData);
+    });
+
     initDaysPicker();
   </script>
 </body>
