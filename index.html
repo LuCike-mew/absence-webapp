@@ -547,16 +547,25 @@
 
         const pair = day.pairs.find(p => p.num === pairNum);
         if (pair) {
+          // Страховка: берем full_date, а если его нет — fallback на date
+          const pairDate = day.full_date || day.date;
+
           absences.push({
-            date: day.full_date,
+            date: pairDate,
             pair_number: pair.num,
+            pair_num: pair.num, // Дублируем ключ на случай разницы в именовании на бэкенде
             subject: pair.subject
           });
         }
       });
 
       showToast("Сохранение...");
-      tg.sendData(JSON.stringify({ absences: absences }));
+
+      try {
+        tg.sendData(JSON.stringify({ absences: absences }));
+      } catch (err) {
+        console.error("Ошибка при вызове sendData:", err);
+      }
     }
 
     initDaysPicker();
