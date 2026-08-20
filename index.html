@@ -30,29 +30,28 @@
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
-      padding: 10px 12px;
-      padding-bottom: 80px;
+      padding: 14px;
+      padding-bottom: 90px;
       min-height: 100vh;
     }
 
-    /* Навигация */
     .nav-tabs {
       display: flex;
       background-color: var(--secondary-bg-color);
-      padding: 3px;
+      padding: 4px;
       border-radius: var(--border-radius);
-      margin-bottom: 10px;
+      margin-bottom: 14px;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 8px 0;
+      padding: 10px;
       border: none;
       background: transparent;
       color: var(--hint-color);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
-      border-radius: 9px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -70,47 +69,46 @@
       display: block;
     }
 
-    /* Компактный переключатель дней */
     .days-picker {
       display: flex;
-      gap: 5px;
-      margin-bottom: 12px;
-      width: 100%;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+      scrollbar-width: none;
+    }
+
+    .days-picker::-webkit-scrollbar {
+      display: none;
     }
 
     .day-pill {
-      flex: 1;
-      min-width: 0;
-      padding: 7px 2px;
+      flex: 0 0 auto;
+      min-width: 65px;
+      padding: 8px 10px;
       background-color: var(--secondary-bg-color);
       border-radius: 10px;
       text-align: center;
       cursor: pointer;
       border: 1px solid transparent;
-      transition: all 0.15s ease;
     }
 
     .day-pill.active {
       border-color: var(--button-color);
-      background-color: rgba(46, 166, 255, 0.12);
+      background-color: rgba(46, 166, 255, 0.1);
     }
 
     .day-pill-name {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--hint-color);
       text-transform: uppercase;
-      font-weight: 700;
-      line-height: 1;
+      font-weight: 600;
     }
 
     .day-pill-date {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      margin-top: 3px;
-      line-height: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin-top: 2px;
     }
 
     .day-pill.active .day-pill-name,
@@ -119,32 +117,29 @@
     }
 
     .section-title {
-      font-size: 11px;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       color: var(--hint-color);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-weight: 700;
-      padding-left: 2px;
     }
 
-    /* Карточки пар */
     .cards-container {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .pair-card {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 10px 12px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border: 1.5px solid transparent;
+      border: 2px solid transparent;
       cursor: pointer;
-      transition: border-color 0.15s ease, background-color 0.15s ease;
     }
 
     .pair-card.selected {
@@ -155,14 +150,13 @@
     .pair-info {
       display: flex;
       flex-direction: column;
-      gap: 3px;
-      padding-right: 8px;
+      gap: 4px;
     }
 
     .pair-header {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .pair-badge {
@@ -172,31 +166,29 @@
     }
 
     .replacement-tag {
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--warning-color);
       background-color: rgba(230, 162, 60, 0.15);
-      padding: 2px 5px;
+      padding: 2px 6px;
       border-radius: 4px;
       text-transform: uppercase;
     }
 
     .pair-title {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
-      line-height: 1.25;
     }
 
     .checkbox {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       border: 2px solid var(--hint-color);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: all 0.15s ease;
     }
 
     .pair-card.selected .checkbox {
@@ -207,41 +199,41 @@
     .pair-card.selected .checkbox::after {
       content: '';
       width: 4px;
-      height: 7px;
+      height: 8px;
       border: solid var(--button-text-color);
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
       margin-top: -2px;
     }
 
-    /* Фильтры и история */
     .filter-box {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 10px;
-      margin-bottom: 10px;
+      padding: 12px;
+      margin-bottom: 14px;
       display: flex;
-      gap: 8px;
+      gap: 10px;
+      align-items: center;
     }
 
     .filter-group {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
     }
 
     .filter-group label {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--hint-color);
       font-weight: 600;
     }
 
     .filter-group input {
       background-color: var(--bg-color);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: var(--text-color);
-      padding: 6px 8px;
+      padding: 8px;
       border-radius: 6px;
       font-size: 12px;
       outline: none;
@@ -250,7 +242,7 @@
     .history-card {
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
-      padding: 10px 12px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -259,43 +251,40 @@
     .history-date {
       font-size: 11px;
       color: var(--hint-color);
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
     .status-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
       background-color: rgba(255, 82, 82, 0.12);
       color: var(--danger-color);
-      white-space: nowrap;
     }
 
     .empty-state {
       text-align: center;
-      padding: 24px 10px;
+      padding: 30px 10px;
       background-color: var(--secondary-bg-color);
       border-radius: var(--border-radius);
       color: var(--hint-color);
       font-size: 13px;
     }
 
-    /* Нижняя панель */
     .bottom-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 10px 12px;
+      padding: 14px;
       background-color: var(--bg-color);
       border-top: 1px solid rgba(255, 255, 255, 0.05);
-      z-index: 100;
     }
 
     .submit-btn {
       width: 100%;
-      padding: 11px;
+      padding: 12px;
       border: none;
       border-radius: var(--border-radius);
       background-color: var(--button-color);
@@ -303,7 +292,6 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.15s ease, transform 0.1s ease;
     }
 
     .submit-btn:active {
@@ -311,17 +299,16 @@
       opacity: 0.85;
     }
 
-    /* Тоаст уведомление */
     .toast {
       position: fixed;
-      top: 12px;
+      top: 16px;
       left: 50%;
       transform: translateX(-50%) translateY(-80px);
       background-color: #4caf50;
       color: #ffffff;
-      padding: 10px 18px;
+      padding: 12px 20px;
       border-radius: 10px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
       transition: transform 0.3s ease, opacity 0.3s ease;
@@ -545,13 +532,11 @@
         const day = weekData[dayIdx];
         if (!day) return;
 
-        const pair = day.pairs.find(p => Number(p.num) === Number(pairNum));
+        const pair = day.pairs.find(p => p.num === pairNum);
         if (pair) {
-          const pairDate = day.full_date || day.date;
-
           absences.push({
-            date: pairDate,
-            pair_number: Number(pair.num),
+            date: day.full_date,
+            pair_number: pair.num,
             subject: pair.subject
           });
         }
@@ -559,15 +544,8 @@
 
       showToast("Сохранение...");
 
-      setTimeout(() => {
-        try {
-          tg.sendData(JSON.stringify({ absences: absences }));
-          tg.close();
-        } catch (err) {
-          console.error("Ошибка при вызове sendData:", err);
-          tg.showAlert("Откройте приложение через кнопку клавиатуры 'Отметить пропуски'.");
-        }
-      }, 200);
+      // Отправка данных боту через Telegram Web App SDK
+      tg.sendData(JSON.stringify({ absences: absences }));
     }
 
     initDaysPicker();
