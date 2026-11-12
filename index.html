@@ -145,6 +145,8 @@
       border: 1.5px solid transparent;
       cursor: pointer;
       transition: border-color 0.15s ease, background-color 0.15s ease;
+      position: relative;
+      overflow: hidden;
     }
 
     .pair-card.selected {
@@ -172,13 +174,18 @@
     }
 
     .replacement-tag {
+      position: absolute;
+      top: 4px;
+      right: 6px;
       font-size: 9px;
       font-weight: 700;
       color: var(--warning-color);
       background-color: rgba(230, 162, 60, 0.15);
-      padding: 2px 5px;
+      padding: 2px 6px;
       border-radius: 4px;
       text-transform: uppercase;
+      border: 1px solid rgba(230, 162, 60, 0.3);
+      z-index: 1;
     }
 
     .pair-title {
@@ -555,10 +562,10 @@
         const card = document.createElement('div');
         card.className = `pair-card ${selectedPairs.has(key) ? 'selected' : ''}`;
         card.innerHTML = `
+          ${pair.is_replacement ? '<span class="replacement-tag">Замена</span>' : ''}
           <div class="pair-info">
             <div class="pair-header">
               <span class="pair-badge">${pair.num} пара</span>
-              ${pair.is_replacement ? '<span class="replacement-tag">Замена</span>' : ''}
             </div>
             <span class="pair-title">${pair.subject}</span>
           </div>
