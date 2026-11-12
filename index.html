@@ -357,6 +357,29 @@
       transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
+
+    .view-mode-banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      background-color: rgba(230, 162, 60, 0.14);
+      border: 1px solid rgba(230, 162, 60, 0.35);
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--text-color);
+    }
+
+    .view-mode-banner.show {
+      display: flex;
+    }
+
+    .view-mode-banner .banner-icon {
+      flex-shrink: 0;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -366,6 +389,11 @@
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchMainTab('schedule')">Расписание</button>
     <button class="tab-btn" onclick="switchMainTab('history')">История</button>
+  </div>
+
+  <div id="view-mode-banner" class="view-mode-banner">
+    <span class="banner-icon">⚠️</span>
+    <span>Режим просмотра. Чтобы отметить пропуски, закройте приложение и откройте его кнопкой <b>«Отметить пропуски»</b> в чате с ботом.</span>
   </div>
 
   <div id="tab-schedule" class="tab-content active">
@@ -399,6 +427,19 @@
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
+
+    // sendData работает ТОЛЬКО при запуске из кнопки клавиатуры («Отметить пропуски»).
+    // При запуске из menu button / inline-кнопки / прямой ссылки initData заполнен,
+    // и tg.sendData() молча НЕ доставит данные боту. Поэтому сохранение разрешаем
+    // только из кнопки клавиатуры, а в остальных случаях показываем режим просмотра.
+    const canSendData = !(tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0);
+    console.log('[ScheduleApp] Контекст запуска:', canSendData
+      ? 'кнопка клавиатуры (сохранение доступно)'
+      : 'menu/inline/ссылка (только просмотр)');
+    if (!canSendData) {
+      const banner = document.getElementById('view-mode-banner');
+      if (banner) banner.classList.add('show');
+    }
 
     // ── Чтение параметров из URL ───────────────────────────────────────────
     const urlParams = new URLSearchParams(window.location.search);
@@ -639,6 +680,11 @@
 
     // ── Отправка данных боту ──────────────────────────────────────────────
     function sendData() {
+      if (!canSendData) {
+        tg.showAlert("Сохранение доступно только при открытии через кнопку «Отметить пропуски» в чате бота. Сейчас приложение открыто в режиме просмотра — закройте его и нажмите эту кнопку.");
+        return;
+      }
+
       if (selectedPairs.size === 0) {
         tg.showAlert("Выберите хотя бы одну пару для отметки пропуска");
         return;
