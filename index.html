@@ -328,19 +328,87 @@
     }
 
     .history-card {
-      background-color: var(--secondary-bg-color);
-      border-radius: var(--border-radius);
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
+      display: none;
     }
 
-    .history-card .pair-info {
+    /* Дневные карточки в истории */
+    .day-card {
+      background-color: var(--secondary-bg-color);
+      border-radius: 12px;
+      padding: 12px 10px;
+      margin-bottom: 10px;
+    }
+
+    .day-card-header {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+
+    .day-row {
+      display: flex;
+      align-items: center;
+      padding: 7px 4px;
+      gap: 8px;
+      border-radius: 6px;
+    }
+
+    .day-row .pair-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--hint-color);
+      min-width: 28px;
+      white-space: nowrap;
+    }
+
+    .day-row .pair-subject {
       flex: 1;
+      font-size: 13px;
+      color: var(--text-color);
       min-width: 0;
-      padding-right: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .day-row.pair-absent {
+      background-color: rgba(46, 166, 255, 0.05);
+    }
+
+    .day-row.pair-present {
+      /* без фона, обычная пара */
+    }
+
+    .absence-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background-color: rgba(46, 166, 255, 0.12);
+      color: var(--button-color);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .day-card-separator {
+      height: 1px;
+      background-color: rgba(255, 255, 255, 0.06);
+      margin: 8px 4px 6px;
+    }
+
+    .day-card-total {
+      font-size: 12px;
+      color: var(--hint-color);
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .day-card-total strong {
+      color: var(--button-color);
     }
 
     .delete-btn {
@@ -856,23 +924,91 @@
       const totalHours = data.length * 2;
       totalEl.textContent = `Всего ${totalHours} ч.`;
 
+      // Группируем пропуски по дате
+      const grouped = {};
       data.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'history-card';
-        card.innerHTML = `
-          <div class="pair-info">
-            <span class="pair-title">${item.subject}</span>
-            <span class="history-date">${formatDateDDMMYYYY(item.date)} (Пара №${item.pair_num})</span>
-          </div>
-          <span class="hours-badge">2 ч.</span>
-          <button class="delete-btn" title="Удалить пропуск">✕</button>
-        `;
+        if (!grouped[item.date]) grouped[item.date] = [];
+        grouped[item.date].push(item);
+      });
 
-        const deleteBtn = card.querySelector('.delete-btn');
-        deleteBtn.onclick = (e) => {
-          e.stopPropagation();
-          deleteAbsenceItem(item, card);
-        };
+      // Сортируем даты по возрастанию
+      const dates = Object.keys(grouped).sort();
+
+      dates.forEach(dateKey => {
+        const absences = grouped[dateKey];
+        const scheduleDay = weekData.find(d => d.full_date === dateKey);
+
+        const card = document.createElement('div');
+        card.className = 'day-card';
+
+        // Заголовок: дата + день недели
+        const dayName = scheduleDay ? scheduleDay.day_name : '';
+        const dateFormatted = formatDateDDMMYYYY(dateKey);
+        const headerText = dayName
+          ? `${dateFormatted}, ${dayName}`
+          : dateFormatted;
+
+        let html = `<div class="day-card-header">${headerText}</div>`;
+
+        if (scheduleDay && scheduleDay.pairs && scheduleDay.pairs.length > 0) {
+          // Показываем ВСЕ пары из расписания этого дня
+          scheduleDay.pairs.forEach(pair => {
+            const absence = absences.find(a => a.pair_num === pair.num);
+            if (absence) {
+              // Пара есть в пропусках
+              html += `
+                <div class="day-row pair-absent" data-absence-id="${absence.id}">
+                  <span class="pair-num">${pair.num} п</span>
+                  <span class="pair-subject">${pair.subject}</span>
+                  ${pair.is_replacement ? '<span class="replacement-tag" style="margin-left: 2px;">Замена</span>' : ''}
+                  <span class="absence-badge">нб — 2 ч.</span>
+                  <button class="delete-btn" title="Убрать из пропусков">✕</button>
+                </div>`;
+            } else {
+              // Пара НЕ пропущена — просто показываем
+              html += `
+                <div class="day-row pair-present">
+                  <span class="pair-num">${pair.num} п</span>
+                  <span class="pair-subject">${pair.subject}</span>
+                  ${pair.is_replacement ? '<span class="replacement-tag" style="margin-left: 2px;">Замена</span>' : ''}
+                </div>`;
+            }
+          });
+        } else {
+          // Расписания нет — показываем только пропуски (старые данные)
+          absences.forEach(absence => {
+            html += `
+              <div class="day-row pair-absent" data-absence-id="${absence.id}">
+                <span class="pair-num">${absence.pair_num} п</span>
+                <span class="pair-subject">${absence.subject}</span>
+                <span class="absence-badge">нб — 2 ч.</span>
+                <button class="delete-btn" title="Убрать из пропусков">✕</button>
+              </div>`;
+          });
+        }
+
+        // Разделитель и итог за день
+        const dayHours = absences.length * 2;
+        html += `
+          <div class="day-card-separator"></div>
+          <div class="day-card-total">
+            📋 Пропущено за день: <strong>${dayHours} ч.</strong>
+          </div>`;
+
+        card.innerHTML = html;
+
+        // Навешиваем обработчики удаления
+        card.querySelectorAll('.delete-btn').forEach(btn => {
+          const row = btn.closest('.day-row');
+          const absenceId = parseInt(row.dataset.absenceId);
+          const absence = absences.find(a => a.id === absenceId);
+          if (absence) {
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              deleteAbsenceItem(absence, row);
+            };
+          }
+        });
 
         container.appendChild(card);
       });
