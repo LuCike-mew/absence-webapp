@@ -209,6 +209,17 @@
       background-color: rgba(46, 166, 255, 0.08);
     }
 
+    .pair-card.already-saved {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: transparent;
+    }
+
+    .pair-card.already-saved .pair-title,
+    .pair-card.already-saved .pair-room {
+      text-decoration: line-through;
+    }
+
     .pair-info {
       display: flex;
       flex-direction: column;
@@ -772,6 +783,12 @@
     }
 
     // ── UI: список пар ─────────────────────────────────────────────────────
+    function isAbsenceSaved(fullDate, pairNum) {
+      return historyData.some(
+        item => item.date === fullDate && item.pair_num === pairNum
+      );
+    }
+
     function renderPairs() {
       const container = document.getElementById('pairs-container');
       const title = document.getElementById('selected-day-title');
@@ -789,13 +806,15 @@
 
       currentDay.pairs.forEach(pair => {
         const key = `${activeDayIndex}_${pair.num}`;
+        const alreadySaved = isAbsenceSaved(currentDay.full_date, pair.num);
         const card = document.createElement('div');
-        card.className = `pair-card ${selectedPairs.has(key) ? 'selected' : ''}`;
+        card.className = `pair-card ${alreadySaved ? 'already-saved' : ''} ${selectedPairs.has(key) ? 'selected' : ''}`;
         card.innerHTML = `
           <div class="pair-info">
             <div class="pair-header">
               <span class="pair-badge">${pair.num} пара</span>
               ${pair.is_replacement ? '<span class="replacement-tag">Замена</span>' : ''}
+              ${alreadySaved ? '<span class="replacement-tag" style="background-color: rgba(255,150,0,0.15); color: #e08c00;">Уже отмечено</span>' : ''}
             </div>
             <span class="pair-title">${pair.subject}</span>
             ${pair.room ? `<span class="pair-room">📍 ${pair.room}</span>` : ''}
@@ -803,15 +822,20 @@
           <div class="checkbox"></div>
         `;
 
-        card.onclick = () => {
-          if (selectedPairs.has(key)) {
-            selectedPairs.delete(key);
-            card.classList.remove('selected');
-          } else {
-            selectedPairs.add(key);
-            card.classList.add('selected');
-          }
-        };
+        if (alreadySaved) {
+          card.style.cursor = 'not-allowed';
+          card.title = 'Пропуск уже сохранён';
+        } else {
+          card.onclick = () => {
+            if (selectedPairs.has(key)) {
+              selectedPairs.delete(key);
+              card.classList.remove('selected');
+            } else {
+              selectedPairs.add(key);
+              card.classList.add('selected');
+            }
+          };
+        }
 
         container.appendChild(card);
       });
@@ -889,6 +913,13 @@
       if (fromVal) filtered = filtered.filter(item => item.date >= fromVal);
       if (toVal) filtered = filtered.filter(item => item.date <= toVal);
 
+      // Сортировка: сначала старые, потом новые
+      filtered.sort((a, b) => {
+        if (a.date < b.date) return -1;
+        if (a.date > b.date) return 1;
+        return a.pair_num - b.pair_num;
+      });
+
       renderHistory(filtered);
     }
 
@@ -943,6 +974,15 @@
       if (rawHistoryCompressed) {
         historyData = await parseCompressedHistory(rawHistoryCompressed);
       }
+
+      // Авто-фильтр: дата «с» = первое число текущего месяца
+      const now = new Date();
+      const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const dateFromEl = document.getElementById('date-from');
+      if (dateFromEl && !dateFromEl.value) {
+        dateFromEl.value = firstOfMonth;
+      }
+
       console.log('[ScheduleApp] === Готово ===');
     })();
   </script>
