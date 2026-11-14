@@ -74,8 +74,7 @@
     .days-picker {
       display: flex;
       gap: 5px;
-      margin-bottom: 12px;
-      width: 100%;
+      flex: 1;
     }
 
     .day-pill {
@@ -116,6 +115,40 @@
     .day-pill.active .day-pill-name,
     .day-pill.active .day-pill-date {
       color: var(--button-color);
+    }
+
+    /* Стрелки навигации по неделям */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+
+    .nav-arrow {
+      width: 28px;
+      height: 36px;
+      border: none;
+      background-color: var(--secondary-bg-color);
+      color: var(--hint-color);
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .nav-arrow:active:not(:disabled) {
+      background-color: rgba(46, 166, 255, 0.2);
+      color: var(--button-color);
+    }
+
+    .nav-arrow:disabled {
+      opacity: 0.3;
+      cursor: default;
     }
 
     .section-title {
@@ -447,7 +480,11 @@
   </div>
 
   <div id="tab-schedule" class="tab-content active">
-    <div class="days-picker" id="days-picker"></div>
+    <div class="week-nav">
+      <button class="nav-arrow" id="nav-prev" onclick="navWeek(-1)" title="Предыдущая неделя">◀</button>
+      <div class="days-picker" id="days-picker"></div>
+      <button class="nav-arrow" id="nav-next" onclick="navWeek(1)" title="Следующая неделя">▶</button>
+    </div>
     <div class="section-title" id="selected-day-title">Занятия</div>
     <div id="pairs-container" class="cards-container">
       <div class="empty-state">Загрузка расписания…</div>
@@ -499,14 +536,18 @@
     const rawWeek = urlParams.get('week');
     const rawHistoryCompressed = urlParams.get('h');
     const urlVersion = parseInt(urlParams.get('v')) || 10;
+    const rawMonthStart = urlParams.get('ms');  // YYYY-MM-DD, граница навигации
 
     console.log('[ScheduleApp] Версия URL:', urlVersion);
     console.log('[ScheduleApp] week length:', rawWeek ? rawWeek.length : 0);
     console.log('[ScheduleApp] h length:', rawHistoryCompressed ? rawHistoryCompressed.length : 0);
+    console.log('[ScheduleApp] ms (month start):', rawMonthStart);
 
     let weekData = [];
     let historyData = [];
     let activeDayIndex = 0;
+    let currentWeekIndex = 0;
+    let weekGroups = [];
     const selectedPairs = new Set();
 
     // ── Распаковка gzip + url-safe base64 ─────────────────────────────────
@@ -615,36 +656,118 @@
       }
     }
 
-    // ── UI: дни недели ─────────────────────────────────────────────────────
-    function initDaysPicker() {
+    // ── Хелперы ─────────────────────────────────────────────────────────────
+    function formatDateDDMMYYYY(isoDate) {
+      if (!isoDate) return '';
+      const parts = isoDate.split('-');
+      if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+      return isoDate;
+    }
+
+    function getWeekdayFromISO(isoDate) {
+      // 0=Пн … 6=Вс
+      const d = new Date(isoDate + 'T00:00:00');
+      return (d.getDay() + 6) % 7;
+    }
+
+    function buildWeekGroups() {
+      weekGroups = [];
+      let currentGroup = [];
+      weekData.forEach((day, index) => {
+        const wd = getWeekdayFromISO(day.full_date);
+        // Новая группа начинается с понедельника
+        if (wd === 0 && currentGroup.length > 0) {
+          weekGroups.push(currentGroup);
+          currentGroup = [];
+        }
+        currentGroup.push(index);
+      });
+      if (currentGroup.length > 0) {
+        weekGroups.push(currentGroup);
+      }
+    }
+
+    function renderWeekPicker() {
       const picker = document.getElementById('days-picker');
+      const prevBtn = document.getElementById('nav-prev');
+      const nextBtn = document.getElementById('nav-next');
       picker.innerHTML = '';
 
-      if (!weekData || weekData.length === 0) {
+      if (!weekData || weekData.length === 0 || weekGroups.length === 0) {
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
         document.getElementById('pairs-container').innerHTML =
           '<div class="error-state">⚠️ Не удалось загрузить расписание.<br>Проверьте подключение к интернету и попробуйте снова через /start</div>';
         return;
       }
 
-      weekData.forEach((day, index) => {
+      const group = weekGroups[currentWeekIndex];
+
+      group.forEach((dayIndex) => {
+        const day = weekData[dayIndex];
         const pill = document.createElement('div');
-        pill.className = `day-pill ${index === activeDayIndex ? 'active' : ''}`;
+        pill.className = `day-pill ${dayIndex === activeDayIndex ? 'active' : ''}`;
         pill.innerHTML = `
           <div class="day-pill-name">${day.day_name.substring(0, 2)}</div>
           <div class="day-pill-date">${day.date}</div>
         `;
-        pill.onclick = () => selectDay(index);
+        pill.onclick = () => selectDay(dayIndex);
         picker.appendChild(pill);
       });
 
+      // Состояние стрелок
+      prevBtn.disabled = currentWeekIndex <= 0;
+      nextBtn.disabled = currentWeekIndex >= weekGroups.length - 1;
+    }
+
+    function navWeek(dir) {
+      const newIndex = currentWeekIndex + dir;
+      if (newIndex < 0 || newIndex >= weekGroups.length) return;
+      currentWeekIndex = newIndex;
+      activeDayIndex = weekGroups[currentWeekIndex][0];
+      renderWeekPicker();
+      renderPairs();
+    }
+
+    // ── UI: дни недели ─────────────────────────────────────────────────────
+    function initDaysPicker() {
+      buildWeekGroups();
+
+      if (!weekData || weekData.length === 0) {
+        renderWeekPicker();
+        return;
+      }
+
+      // Найти сегодня в weekData и выбрать его по умолчанию
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let todayIndex = weekData.findIndex(d => d.full_date === todayStr);
+      if (todayIndex === -1) todayIndex = weekData.length - 1;
+      activeDayIndex = todayIndex;
+
+      // Определить, в какой неделе находится сегодня
+      for (let i = 0; i < weekGroups.length; i++) {
+        if (weekGroups[i].includes(todayIndex)) {
+          currentWeekIndex = i;
+          break;
+        }
+      }
+
+      renderWeekPicker();
       renderPairs();
     }
 
     function selectDay(index) {
       activeDayIndex = index;
-      document.querySelectorAll('.day-pill').forEach((p, idx) => {
-        p.classList.toggle('active', idx === index);
-      });
+      // Определить, не нужно ли переключить неделю
+      if (!weekGroups[currentWeekIndex] || !weekGroups[currentWeekIndex].includes(index)) {
+        for (let i = 0; i < weekGroups.length; i++) {
+          if (weekGroups[i].includes(index)) {
+            currentWeekIndex = i;
+            break;
+          }
+        }
+      }
+      renderWeekPicker();
       renderPairs();
     }
 
@@ -715,7 +838,7 @@
         card.innerHTML = `
           <div class="pair-info">
             <span class="pair-title">${item.subject}</span>
-            <span class="history-date">${item.date} (Пара №${item.pair_num})</span>
+            <span class="history-date">${formatDateDDMMYYYY(item.date)} (Пара №${item.pair_num})</span>
           </div>
           <span class="hours-badge">2 ч.</span>
           <button class="delete-btn" title="Удалить пропуск">✕</button>
@@ -733,7 +856,7 @@
 
     function deleteAbsenceItem(item, cardElement) {
       tg.showConfirm(
-        `Удалить пропуск?\n\n${item.subject}\n${item.date} (пара №${item.pair_num})`,
+        `Удалить пропуск?\n\n${item.subject}\n${formatDateDDMMYYYY(item.date)} (пара №${item.pair_num})`,
         (confirmed) => {
           if (!confirmed) return;
 
