@@ -270,6 +270,33 @@
       justify-content: space-between;
     }
 
+    .history-card .pair-info {
+      flex: 1;
+      min-width: 0;
+      padding-right: 8px;
+    }
+
+    .delete-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background-color: rgba(255, 82, 82, 0.12);
+      color: var(--danger-color);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .delete-btn:active {
+      background-color: rgba(255, 82, 82, 0.3);
+      transform: scale(0.92);
+    }
+
     .history-date {
       font-size: 11px;
       color: var(--hint-color);
@@ -530,8 +557,14 @@
         const lines = text.split('\n').filter(Boolean);
         console.log('[ScheduleApp] История: строк после распаковки:', lines.length);
         return lines.map(line => {
-          const [date, pair_num, subject] = line.split('|');
-          return { date, pair_num: parseInt(pair_num), subject };
+          const parts = line.split('|');
+          if (parts.length >= 4) {
+            // v12+: ID|date|pair_num|subject
+            return { id: parseInt(parts[0]), date: parts[1], pair_num: parseInt(parts[2]), subject: parts[3] };
+          } else {
+            // v11 fallback: date|pair_num|subject (без id)
+            return { id: null, date: parts[0], pair_num: parseInt(parts[1]), subject: parts[2] };
+          }
         });
       } catch (e) {
         console.error('[ScheduleApp] Ошибка распаковки истории:', e.message);
@@ -653,10 +686,44 @@
             <span class="pair-title">${item.subject}</span>
             <span class="history-date">${item.date} (Пара №${item.pair_num})</span>
           </div>
-          <span class="status-badge">Пропуск</span>
+          <button class="delete-btn" title="Удалить пропуск">✕</button>
         `;
+
+        const deleteBtn = card.querySelector('.delete-btn');
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation();
+          deleteAbsenceItem(item, card);
+        };
+
         container.appendChild(card);
       });
+    }
+
+    function deleteAbsenceItem(item, cardElement) {
+      tg.showConfirm(
+        `Удалить пропуск?\n\n${item.subject}\n${item.date} (пара №${item.pair_num})`,
+        (confirmed) => {
+          if (!confirmed) return;
+
+          if (!canSendData) {
+            tg.showAlert("Удаление доступно только при открытии через кнопку «Отметить пропуски» в чате бота.");
+            return;
+          }
+
+          if (item.id === null || item.id === undefined) {
+            tg.showAlert("Невозможно удалить эту запись — откройте приложение заново через /start");
+            return;
+          }
+
+          // Отправляем удаление боту
+          showToast("Удаление...");
+          tg.sendData(JSON.stringify({ deletions: [{ id: item.id }] }));
+
+          // Сразу убираем карточку из UI
+          cardElement.style.opacity = '0.4';
+          cardElement.style.pointerEvents = 'none';
+        }
+      );
     }
 
     function applyHistoryFilter() {
