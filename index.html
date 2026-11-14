@@ -411,6 +411,55 @@
       color: var(--button-color);
     }
 
+    /* Строка выбрана для удаления */
+    .day-row.pair-absent.row-selected {
+      background-color: rgba(255, 82, 82, 0.1);
+      outline: 1px solid rgba(255, 82, 82, 0.35);
+      border-radius: 6px;
+    }
+
+    /* Панель массового удаления */
+    .delete-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 16px;
+      background-color: var(--bg-color);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .delete-bar.hidden {
+      display: none;
+    }
+
+    .delete-bar .delete-count-text {
+      font-size: 13px;
+      color: var(--hint-color);
+    }
+
+    .delete-bar .delete-confirm-btn {
+      padding: 8px 18px;
+      background-color: rgba(255, 82, 82, 0.15);
+      color: var(--danger-color);
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .delete-bar .delete-confirm-btn:active {
+      background-color: rgba(255, 82, 82, 0.3);
+      transform: scale(0.96);
+    }
+
     .delete-btn {
       width: 32px;
       height: 32px;
@@ -592,6 +641,11 @@
     <button class="submit-btn" onclick="sendData()">Сохранить пропуски</button>
   </div>
 
+  <div class="delete-bar hidden" id="delete-bar">
+    <span class="delete-count-text" id="delete-count-text">Выбрано: 0</span>
+    <button class="delete-confirm-btn" onclick="confirmDeletion()">Удалить выбранное 🗑</button>
+  </div>
+
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
@@ -628,6 +682,7 @@
     let currentWeekIndex = 0;
     let weekGroups = [];
     const selectedPairs = new Set();
+    const selectedForDeletion = new Set();  // absence.id для массового удаления
 
     // ── Распаковка gzip + url-safe base64 ─────────────────────────────────
     async function decompressGzipB64(compressedB64) {
@@ -727,11 +782,13 @@
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
         document.getElementById('tab-schedule').classList.add('active');
         document.getElementById('bottom-bar').style.display = 'block';
+        document.getElementById('delete-bar').classList.add('hidden');
       } else {
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('tab-history').classList.add('active');
         document.getElementById('bottom-bar').style.display = 'none';
         applyHistoryFilter();
+        updateDeleteBar();
       }
     }
 
@@ -997,15 +1054,19 @@
 
         card.innerHTML = html;
 
-        // Навешиваем обработчики удаления
+        // Навешиваем обработчики удаления — мультивыбор
         card.querySelectorAll('.delete-btn').forEach(btn => {
           const row = btn.closest('.day-row');
           const absenceId = parseInt(row.dataset.absenceId);
           const absence = absences.find(a => a.id === absenceId);
           if (absence) {
+            // Восстанавливаем визуальное состояние после перерисовки (фильтр и т.д.)
+            if (selectedForDeletion.has(absenceId)) {
+              row.classList.add('row-selected');
+            }
             btn.onclick = (e) => {
               e.stopPropagation();
-              deleteAbsenceItem(absence, row);
+              toggleDeleteSelection(absenceId, row);
             };
           }
         });
@@ -1014,31 +1075,62 @@
       });
     }
 
-    function deleteAbsenceItem(item, cardElement) {
-      tg.showConfirm(
-        `Удалить пропуск?\n\n${item.subject}\n${formatDateDDMMYYYY(item.date)} (пара №${item.pair_num})`,
-        (confirmed) => {
-          if (!confirmed) return;
+    function toggleDeleteSelection(absenceId, rowElement) {
+      if (selectedForDeletion.has(absenceId)) {
+        selectedForDeletion.delete(absenceId);
+        rowElement.classList.remove('row-selected');
+      } else {
+        selectedForDeletion.add(absenceId);
+        rowElement.classList.add('row-selected');
+      }
+      updateDeleteBar();
+    }
 
-          if (!canSendData) {
-            tg.showAlert("Удаление доступно только при открытии через кнопку «Отметить пропуски» в чате бота.");
-            return;
-          }
+    function updateDeleteBar() {
+      const bar = document.getElementById('delete-bar');
+      const countText = document.getElementById('delete-count-text');
+      if (selectedForDeletion.size > 0) {
+        bar.classList.remove('hidden');
+        countText.textContent = `Выбрано: ${selectedForDeletion.size}`;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
 
-          if (item.id === null || item.id === undefined) {
-            tg.showAlert("Невозможно удалить эту запись — откройте приложение заново через /start");
-            return;
-          }
+    function confirmDeletion() {
+      if (selectedForDeletion.size === 0) return;
 
-          // Отправляем удаление боту
-          showToast("Удаление...");
-          tg.sendData(JSON.stringify({ deletions: [{ id: item.id }] }));
+      if (!canSendData) {
+        tg.showAlert("Удаление доступно только при открытии через кнопку «Отметить пропуски» в чате бота.");
+        return;
+      }
 
-          // Сразу убираем карточку из UI
-          cardElement.style.opacity = '0.4';
-          cardElement.style.pointerEvents = 'none';
+      // Собираем данные для отправки (ищем в historyData по id)
+      const items = [];
+      selectedForDeletion.forEach(id => {
+        const item = historyData.find(h => h.id === id);
+        if (item) {
+          items.push({
+            id: item.id,
+            date: item.date,
+            pair_num: item.pair_num,
+            subject: item.subject
+          });
         }
-      );
+      });
+
+      if (items.length === 0) return;
+
+      showToast("Удаление...");
+      tg.sendData(JSON.stringify({ deletions: items }));
+
+      // Визуальная обратная связь
+      document.querySelectorAll('.day-row.row-selected').forEach(row => {
+        row.style.opacity = '0.4';
+        row.style.pointerEvents = 'none';
+      });
+      selectedForDeletion.clear();
+      updateDeleteBar();
     }
 
     function applyHistoryFilter() {
