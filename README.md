@@ -1,4 +1,4 @@
-# absence-webapp# MiraiBot WebApp — клиентская часть (Telegram Mini App)
+MiraiBot WebApp — клиентская часть (Telegram Mini App)
 
 Фронтенд для Telegram-бота **MiraiBot** (бэкенд-репозиторий: [absence_bot](https://github.com/LuCike-mew/absence-tg-bot)), реализованный в виде **Telegram Mini App** и развёрнутый на **GitHub Pages**.
 
