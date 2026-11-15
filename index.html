@@ -267,6 +267,14 @@
       line-height: 1.25;
     }
 
+    /* Оригинальная пара, которую заменили: перечёркнутый, приглушённый текст.
+   Используется инлайн внутри .pair-title и .pair-room. */
+    .pair-original {
+      color: var(--hint-color);
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
     .checkbox {
       width: 18px;
       height: 18px;
@@ -934,6 +942,23 @@
         const alreadySaved = isAbsenceSaved(currentDay.full_date, pair.num);
         const card = document.createElement('div');
         card.className = `pair-card ${alreadySaved ? 'already-saved' : ''} ${selectedPairs.has(key) ? 'selected' : ''}`;
+
+        // Если пару заменили И известен оригинальный предмет — показываем
+        // оригинал перечёркнутым в той же строке, замену обычным текстом правее.
+        // То же самое для кабинета.
+        const hasOriginal = !!(pair.is_replacement && pair.original_subject);
+
+        const subjectHtml = hasOriginal
+          ? `<span class="pair-original">${pair.original_subject}</span> <span>${pair.subject}</span>`
+          : pair.subject;
+
+        const hasOriginalRoom = hasOriginal && pair.original_room && pair.original_room !== pair.room;
+        const roomHtml = pair.room
+          ? (hasOriginalRoom
+              ? `<span class="pair-room"><span class="pair-original">📍 ${pair.original_room}</span> <span>📍 ${pair.room}</span></span>`
+              : `<span class="pair-room">📍 ${pair.room}</span>`)
+          : '';
+
         card.innerHTML = `
           <div class="pair-info">
             <div class="pair-header">
@@ -941,8 +966,8 @@
               ${pair.is_replacement ? '<span class="replacement-tag">Замена</span>' : ''}
               ${alreadySaved ? '<span class="replacement-tag" style="background-color: rgba(255,150,0,0.15); color: #e08c00;">Уже отмечено</span>' : ''}
             </div>
-            <span class="pair-title">${pair.subject}</span>
-            ${pair.room ? `<span class="pair-room">📍 ${pair.room}</span>` : ''}
+            <span class="pair-title">${subjectHtml}</span>
+            ${roomHtml}
           </div>
           <div class="checkbox"></div>
         `;
