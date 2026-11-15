@@ -952,11 +952,14 @@
           ? `<span class="pair-original">${pair.original_subject}</span> <span>${pair.subject}</span>`
           : pair.subject;
 
-        const hasOriginalRoom = hasOriginal && pair.original_room && pair.original_room !== pair.room;
-        const roomHtml = pair.room
-          ? (hasOriginalRoom
-              ? `<span class="pair-room"><span class="pair-original">📍 ${pair.original_room}</span> <span>📍 ${pair.room}</span></span>`
-              : `<span class="pair-room">📍 ${pair.room}</span>`)
+        // Исходную аудиторию зачёркиваем, если она отличается от текущей
+        // ИЛИ если текущей нет вовсе (например, сам.раб. — пара дома).
+        const showOriginalRoom = hasOriginal && pair.original_room && pair.original_room !== pair.room;
+        const roomHtml = (pair.room || showOriginalRoom)
+          ? `<span class="pair-room">`
+            + (showOriginalRoom ? `<span class="pair-original">📍 ${pair.original_room}</span>` : '')
+            + (pair.room ? ` <span>📍 ${pair.room}</span>` : '')
+            + `</span>`
           : '';
 
         card.innerHTML = `
