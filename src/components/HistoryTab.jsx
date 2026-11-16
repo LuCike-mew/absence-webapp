@@ -42,7 +42,7 @@ export default function HistoryTab() {
   const totalHours = filtered.length * 2;
 
   return (
-    <div id="tab-history" className="tab-content">
+    <div id="tab-history" className="tab-content active">
       <FilterBox
         dateFrom={dateFrom}
         dateTo={dateTo}
