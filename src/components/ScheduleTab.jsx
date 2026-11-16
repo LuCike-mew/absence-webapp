@@ -64,8 +64,10 @@ export default function ScheduleTab() {
   }
 
   const currentDay = weekData[activeDayIndex];
+  const hasNoReplacements = currentDay?.has_site_replacements
+    && currentDay?.pairs?.every((p) => !p.is_replacement);
   const dayTitle = currentDay
-    ? `Занятия — ${currentDay.day_name} (${currentDay.date})`
+    ? `Занятия — ${currentDay.day_name} (${currentDay.date})${hasNoReplacements ? ' • Без замен' : ''}`
     : 'Занятия';
 
   return (
